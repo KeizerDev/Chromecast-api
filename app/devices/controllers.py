@@ -1,6 +1,6 @@
 import pychromecast
 import re
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, abort
 
 devices = Blueprint('devices', __name__)
 
@@ -17,14 +17,19 @@ def devicesList():
 @devices.route('/<string:chromecast>')
 def devicesShow(chromecast):
     cast = pychromecast.get_chromecast(friendly_name=chromecast)
-    cast.wait()
+    if cast is None:
+        abort(404)
 
+    cast.wait()
     return jsonify({'device': cast.device})
 
 
 @devices.route('/<string:chromecast>/media/<string:url>')
 def mediaPlayUrl(chromecast, url):
     cast = pychromecast.get_chromecast(friendly_name=chromecast)
+    if cast is None:
+        abort(404)
+
     cast.wait()
     mc = cast.media_controller
     mc.play_media('http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'video/mp4')
@@ -34,6 +39,9 @@ def mediaPlayUrl(chromecast, url):
 @devices.route('/<string:chromecast>/status')
 def mediaStatus(chromecast, url):
     cast = pychromecast.get_chromecast(friendly_name=chromecast)
+    if cast is None:
+        abort(404)
+
     cast.wait()
     mc = cast.media_controller
     return jsonify({'device': mc})
